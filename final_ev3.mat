@@ -1,0 +1,117 @@
+%brick = ConnectBrick('EV3P');
+%DisconnectBrick('EV3P');
+%ports = A= right motor, B = left motor C= motor
+%sensorports = 1 = ultrasonic 2= color 4= pressure
+global key
+runtime=1;
+brick.SetColorMode(2,2);
+color = brick.ColorCode(2);
+disp(color);
+% blue is pickup = 2
+pickupcolor = 2;
+dropoffcolor = 4;
+% yellow is drop off = 4
+stopcolor=5;
+while runtime==1
+    brick.MoveMotor('AB',-50)
+    obstacle = brick.TouchPressed(4);
+    %color = brick.ColorCode(2);
+    brick.SetColorMode(2,2);
+    color = brick.ColorCode(2);
+    
+    if obstacle==1
+        brick.StopAllMotors
+        pause(1);
+        brick.MoveMotor('AB',40);
+        pause(1);
+        brick.StopAllMotors
+        brick.MoveMotor('A', 25);
+        brick.MoveMotor('B',-25);
+        pause(1);
+        disp(color);
+    end
+    
+    
+    %stop lines
+    if color == 5
+        brick.StopAllMotors('Coast')
+        pause(2)
+        brick.MoveMotor('AB',25)
+        disp(color);
+    end
+    %wheelchair navi
+    if color == 2
+        brick.StopAllMotors('Coast')
+        %key control
+        InitKeyboard();
+        
+        while 1
+            pause(0.1);
+            
+            switch key
+                case 'uparrow'
+                    disp('Move up');
+                    brick.MoveMotor('A',15);
+                    brick.MoveMotor('B',15);
+                    pause(.1);
+                case 'downarrow'
+                    disp('Move down');
+                    brick.MoveMotor('A',-15);
+                    brick.MoveMotor('B',-15);
+                    pause(.1);
+                case 'leftarrow'
+                    disp('Move left');
+                    brick.MoveMotor('A',0);
+                    brick.MoveMotor('B',15);
+                    pause(.1);
+                case 'rightarrow'
+                    disp('Move right');
+                    brick.MoveMotor('B',0);
+                    brick.MoveMotor('A',15);
+                    pause(.1);
+                case 'p'
+                    disp('Pickup wheelchair');
+                    brick.MoveMotor('C',-20);
+                    pause(1);
+                case 'o'
+                    disp('Reverse motor');
+                    brick.MoveMotor('C',20);
+                    pause(1);
+                case 'l'
+                    disp('Stop Claw');
+                    brick.StopMotor('C');
+                    pause(1);
+                case 'm'
+                    disp('Stop Car');
+                    brick.StopMotor('AB');
+                    pause(1);
+                case 'q'
+                    brick.MoveMotor('AB',0);
+                    break;
+            end
+        end
+        CloseKeyboard();
+        
+        dist = brick.UltrasonicDist(1);
+        display(dist);
+        
+        if dist<3
+            brick.MoveMotor('A', -50)
+            brick.MoveMotor('B', -25)
+            pause(1)
+        end
+        
+        if dist>30
+            brick.MoveMotor('A',-25)
+            brick.MoveMotor('B',-50)
+            pause(3)
+            brick.StopAllMotors('Coast')
+        end
+    end
+   % if color == dropoffcolor
+      %      brick.StopAllMotors('Coast')
+          %  brick.MoveMotor('C',20);
+          %  pause(1)
+   % end
+end
+
